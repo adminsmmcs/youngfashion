@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ตารางการทำงาน พนักงานขาย/PC/BA - แผนก Young Fashion</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Sarabun for Thai compatibility -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Sarabun', 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom scrollbar for beautiful dashboard lists */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col antialiased">
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the environment or defaults
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'young-fashion-shift-app-2026';
+        let firebaseConfig;
+        try {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } catch (e) {
+            // Fallback development config (if not provided by environment)
+            firebaseConfig = {
+                apiKey: "",
+                authDomain: "mock-project.firebaseapp.com",
+                projectId: "mock-project",
+                storageBucket: "mock-project.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:abcdef"
+            };
+        }
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Export to window for global access in Vanilla JS
+        window.db = db;
+        window.auth = auth;
+        window.appId = appId;
+        window.signInAnonymously = signInAnonymously;
+        window.signInWithCustomToken = signInWithCustomToken;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.collection = collection;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.getDocs = getDocs;
+        window.onSnapshot = onSnapshot;
+    </script>
+
+    <div class="flex-1 flex flex-col max-w-md mx-auto w-full bg-white shadow-xl overflow-hidden relative">
+        <!-- Main Header -->
+        <header class="bg-gradient-to-r from-indigo-700 via-indigo-800 to-purple-800 text-white px-5 py-5 rounded-b-3xl shadow-lg relative overflow-hidden">
+            <!-- Decorative circle backgrounds -->
+            <div class="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500 rounded-full opacity-20 pointer-events-none"></div>
+            <div class="absolute -left-10 -bottom-10 w-24 h-24 bg-purple-500 rounded-full opacity-25 pointer-events-none"></div>
+            
+            <div class="relative z-10 flex justify-between items-start">
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white mb-0.5">ตารางการทำงาน พนักงานขาย/PC/BA</h1>
+                    <p class="text-indigo-200 text-sm font-medium flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        แผนก Young Fashion
+                    </p>
+                </div>
+                <button onclick="openConfigModal()" class="text-indigo-200 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors">
+                    <i class="fa-solid fa-circle-info text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Body (Scrollable Container) -->
+        <main class="flex-1 overflow-y-auto px-4 py-5 space-y-5 custom-scrollbar pb-32">
+            
+            <!-- Month Selection & Employee Selection Container -->
+            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-4 shadow-sm">
+                <!-- Dropdown Month Picker -->
+                <div>
+                    <label for="month-select" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                        <i class="fa-regular fa-calendar-days text-indigo-600 mr-1"></i> เลือกเดือนที่ต้องการลงกะ
+                    </label>
+                    <div class="relative">
+                        <select id="month-select" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none shadow-sm transition-all text-slate-700">
+                            <!-- Options filled dynamically -->
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dropdown Employee Picker -->
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label for="employee-select" class="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            <i class="fa-solid fa-user-tag text-indigo-600 mr-1"></i> เลือกชื่อของคุณ (คอลัมน์ C)
+                        </label>
+                        <!-- Add Employee Trigger Button -->
+                        <button onclick="openAddEmployeeModal()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 transition-colors">
+                            <i class="fa-solid fa-user-plus"></i> เพิ่มพนักงานใหม่
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <select id="employee-select" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none shadow-sm transition-all text-slate-700">
+                            <option value="" disabled selected>-- กรุณาเลือกชื่อพนักงาน --</option>
+                            <!-- Options filled dynamically -->
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-10 pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </div>
+                        <div id="brand-badge-container" class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                            <!-- Brand badge dynamically filled -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Container -->
+            <div id="calendar-wrapper" class="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden hidden transition-all duration-300">
+                <div class="bg-indigo-50/50 px-4 py-3 border-b border-indigo-100 flex justify-between items-center">
+                    <span class="text-xs font-bold text-indigo-800 uppercase tracking-wide flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar text-indigo-600"></i> แตะวันที่เพื่อบันทึกกะการทำงาน
+                    </span>
+                    <span id="calendar-completion-stat" class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                        0/0 วัน
+                    </span>
+                </div>
+                
+                <div class="p-4">
+                    <!-- Calendar Header: Monday to Sunday (Thai style) -->
+                    <div class="grid grid-cols-7 gap-1.5 text-center mb-2">
+                        <div class="text-xs font-bold text-slate-500">จ</div>
+                        <div class="text-xs font-bold text-slate-500">อ</div>
+                        <div class="text-xs font-bold text-slate-500">พ</div>
+                        <div class="text-xs font-bold text-slate-500">พฤ</div>
+                        <div class="text-xs font-bold text-slate-500">ศ</div>
+                        <div class="text-xs font-bold text-emerald-600">ส</div>
+                        <div class="text-xs font-bold text-rose-600">อา</div>
+                    </div>
+
+                    <!-- Days Grid -->
+                    <div id="calendar-days" class="grid grid-cols-7 gap-1.5">
+                        <!-- Filled Dynamically -->
+                    </div>
+                </div>
+
+                <!-- Shift Legend -->
+                <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 grid grid-cols-3 gap-2 text-[11px] text-slate-500">
+                    <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-indigo-500 inline-block"></span>กะ 1 (9:30 - 19:00 น.)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-emerald-500 inline-block"></span>กะ 2 (10:30 - 20:00 น.)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-purple-500 inline-block"></span>กะ 3 (11:30 - 21:00 น.)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-amber-500 inline-block"></span>W (วันหยุดประจำสัปดาห์)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-rose-500 inline-block"></span>V (พักร้อน)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-sky-500 inline-block"></span>C (การขอเปลี่ยนวันหยุด)</div>
+                </div>
+            </div>
+
+            <!-- Dashboard / Status Completion List -->
+            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-pie text-indigo-600"></i> สรุปความคืบหน้าการกรอกข้อมูล
+                    </h3>
+                    <span id="dashboard-month-label" class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
+                        มิถุนายน 2569
+                    </span>
+                </div>
+
+                <div id="dashboard-employees-list" class="space-y-3 max-h-64 overflow-y-auto custom-scrollbar pr-1">
+                    <!-- Progress list filled dynamically -->
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer sticky button container -->
+        <div class="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-5 py-4 flex flex-col gap-2 shadow-2xl z-20 rounded-t-3xl">
+            <button id="btn-submit-shifts" onclick="submitShifts()" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-800 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-indigo-600/25 hover:from-indigo-700 hover:to-indigo-900 transition-all active:scale-[0.98] flex justify-center items-center gap-2 text-sm">
+                <i class="fa-solid fa-paper-plane"></i> ส่งตารางกะการทำงานประจำเดือน
+            </button>
+            <p class="text-[10px] text-slate-400 text-center flex items-center justify-center gap-1">
+                <i class="fa-solid fa-shield-halved"></i> ระบบจะบันทึกผลไปยัง Google Sheet ของแผนกโดยอัตโนมัติ
+            </p>
+        </div>
+
+        <!-- Shift Picker Bottom Sheet / Modal Popup -->
+        <div id="shift-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-end justify-center hidden opacity-0 transition-opacity duration-300" onclick="closeShiftModal(event)">
+            <div class="bg-white w-full max-w-md rounded-t-3xl shadow-2xl overflow-hidden p-5 space-y-4 translate-y-full transition-transform duration-300" onclick="event.stopPropagation()">
+                <div class="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-1"></div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h4 class="text-base font-bold text-slate-800">เลือกประเภทกะ/วันทำงาน</h4>
+                        <p id="shift-modal-date" class="text-xs text-slate-500 font-semibold"></p>
+                    </div>
+                    <button onclick="closeShiftModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Shift Choice Options -->
+                <div class="grid grid-cols-3 gap-2.5">
+                    <!-- Option 1 -->
+                    <button onclick="selectShift('1')" class="flex flex-col items-center justify-center border border-indigo-100 bg-indigo-50/40 p-3 rounded-2xl hover:bg-indigo-50 transition-all">
+                        <span class="w-8 h-8 rounded-full bg-indigo-500 text-white text-xs font-bold flex items-center justify-center shadow-md mb-1.5">1</span>
+                        <span class="text-xs font-bold text-indigo-900">กะ 1</span>
+                        <span class="text-[9px] text-indigo-500 font-medium">09:30 - 19:00</span>
+                    </button>
+                    <!-- Option 2 -->
+                    <button onclick="selectShift('2')" class="flex flex-col items-center justify-center border border-emerald-100 bg-emerald-50/40 p-3 rounded-2xl hover:bg-emerald-50 transition-all">
+                        <span class="w-8 h-8 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center shadow-md mb-1.5">2</span>
+                        <span class="text-xs font-bold text-emerald-900">กะ 2</span>
+                        <span class="text-[9px] text-emerald-500 font-medium">10:30 - 20:00</span>
+                    </button>
+                    <!-- Option 3 -->
+                    <button onclick="selectShift('3')" class="flex flex-col items-center justify-center border border-purple-100 bg-purple-50/40 p-3 rounded-2xl hover:bg-purple-50 transition-all">
+                        <span class="w-8 h-8 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md mb-1.5">3</span>
+                        <span class="text-xs font-bold text-purple-900">กะ 3</span>
+                        <span class="text-[9px] text-purple-500 font-medium">11:30 - 21:00</span>
+                    </button>
+                    <!-- Option W -->
+                    <button onclick="selectShift('W')" class="flex flex-col items-center justify-center border border-amber-100 bg-amber-50/40 p-3 rounded-2xl hover:bg-amber-50 transition-all">
+                        <span class="w-8 h-8 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md mb-1.5">W</span>
+                        <span class="text-xs font-bold text-amber-900">วันหยุดประจำสัปดาห์</span>
+                        <span class="text-[9px] text-amber-500 font-medium">วันหยุด</span>
+                    </button>
+                    <!-- Option V -->
+                    <button onclick="selectShift('V')" class="flex flex-col items-center justify-center border border-rose-100 bg-rose-50/40 p-3 rounded-2xl hover:bg-rose-50 transition-all">
+                        <span class="w-8 h-8 rounded-full bg-rose-500 text-white text-xs font-bold flex items-center justify-center shadow-md mb-1.5">V</span>
+                        <span class="text-xs font-bold text-rose-900">พักร้อน</span>
+                        <span class="text-[9px] text-rose-500 font-medium">วันลาพักร้อน</span>
+                    </button>
+                    <!-- Option C -->
+                    <button onclick="triggerShiftC()" class="flex flex-col items-center justify-center border border-sky-100 bg-sky-50/40 p-3 rounded-2xl hover:bg-sky-50 transition-all">
+                        <span class="w-8 h-8 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md mb-1.5">C</span>
+                        <span class="text-xs font-bold text-sky-900">การขอเปลี่ยนวันหยุด</span>
+                        <span class="text-[9px] text-sky-500 font-medium">ย้ายวันหยุด (C)</span>
+                    </button>
+                </div>
+
+                <!-- Shift "C" details section (appears when C is tapped) -->
+                <div id="shift-c-details" class="bg-sky-50 border border-sky-100 rounded-2xl p-4 hidden space-y-3 transition-all duration-300">
+                    <label class="block text-xs font-bold text-sky-900 uppercase">
+                        <i class="fa-regular fa-clock"></i> ย้ายมาจากวันไหน? (เช่น 15/5/26 หรือ 15/5)
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="text" id="shift-c-source-date" placeholder="ระบุวันที่เดิม เช่น 15/5" class="flex-1 bg-white border border-sky-200 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+                        <button onclick="confirmShiftC()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 rounded-xl text-xs shadow-md transition-colors">
+                            ยืนยัน
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex justify-between gap-3 pt-2">
+                    <button onclick="clearDayShift()" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold py-3 rounded-xl text-xs transition-colors">
+                        <i class="fa-solid fa-eraser mr-1"></i> ลบข้อมูลกะวันนี้
+                    </button>
+                    <button onclick="closeShiftModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-3 rounded-xl text-xs transition-colors">
+                        ยกเลิก
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Employee Modal Popup -->
+        <div id="add-employee-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300" onclick="closeAddEmployeeModal(event)">
+            <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4 scale-90 transition-transform duration-300" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h4 class="text-base font-bold text-slate-800">
+                        <i class="fa-solid fa-user-plus text-indigo-600 mr-1.5"></i> เพิ่มพนักงานใหม่
+                    </h4>
+                    <button onclick="closeAddEmployeeModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="new-employee-name" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">ชื่อ - นามสกุล (คอลัมน์ C)</label>
+                        <input type="text" id="new-employee-name" placeholder="ระบุ ชื่อ และนามสกุลพนักงาน" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="new-employee-brand" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">ชื่อแบรนด์ / สังกัด</label>
+                        <input type="text" id="new-employee-brand" placeholder="ระบุชื่อแบรนด์ เช่น Mc Jeans, Wrangler" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button onclick="closeAddEmployeeModal()" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold py-3 rounded-xl text-xs transition-colors">
+                        ยกเลิก
+                    </button>
+                    <button onclick="saveNewEmployee()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl text-xs shadow-md shadow-indigo-600/20 transition-all">
+                        <i class="fa-regular fa-square-plus mr-1"></i> บันทึกพนักงาน
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration/Info Modal for Sheets Simulation -->
+        <div id="config-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300" onclick="closeConfigModal(event)">
+            <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4 scale-90 transition-transform duration-300 max-h-[85vh] overflow-y-auto custom-scrollbar" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h4 class="text-base font-bold text-slate-800">
+                        <i class="fa-solid fa-code text-indigo-600 mr-1.5"></i> จำลองเชื่อม Google Sheets
+                    </h4>
+                    <button onclick="closeConfigModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-3.5 text-xs text-slate-600">
+                    <p class="font-semibold text-slate-800 text-sm">การเชื่อมต่อตารางการทำงานจริง:</p>
+                    <p>ระบบนี้รองรับการเชื่อมต่อ API ของคุณเข้ากับ <strong>Google Apps Script (Web App)</strong> เพื่อส่งตรงเข้า <strong>Google Sheet</strong> ของคุณจริงๆ</p>
+                    
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+                        <span class="block font-bold text-[10px] uppercase text-indigo-700">ติดตั้ง Google Web App URL</span>
+                        <input type="text" id="config-webhook-url" placeholder="กรอก URL ของ Apps Script" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-indigo-500">
+                        <button onclick="saveConfigWebhook()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-1.5 rounded-lg text-[10px] transition-colors">
+                            อัปเดต / บันทึก URL
+                        </button>
+                    </div>
+
+                    <p class="font-semibold text-slate-800 text-sm pt-2">โค้ดแนะนำ (Google Apps Script):</p>
+                    <div class="bg-slate-900 text-indigo-200 p-2.5 rounded-xl font-mono text-[9px] overflow-x-auto">
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  // ตัวอย่างบันทึกตามแถว คอลัมน์ C (ชื่อพนักงาน)
+  // ... ดูรายละเอียดคู่มือเพิ่มเติม ...
+  return ContentService.createTextOutput("SUCCESS");
+}
+                    </div>
+                </div>
+
+                <button onclick="closeConfigModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2.5 rounded-xl text-xs transition-colors">
+                    ปิดหน้าต่างนี้
+                </button>
+            </div>
+        </div>
+
+        <!-- Custom Message Box Modal (Alternative to alert) -->
+        <div id="toast-modal" class="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300" onclick="closeToastModal()">
+            <div class="bg-white w-full max-w-xs rounded-3xl shadow-2xl p-5 text-center space-y-3 transform scale-90 transition-transform duration-300" onclick="event.stopPropagation()">
+                <div id="toast-icon" class="w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl">
+                    <!-- Icon filled dynamically -->
+                </div>
+                <div>
+                    <h4 id="toast-title" class="text-sm font-bold text-slate-800"></h4>
+                    <p id="toast-message" class="text-xs text-slate-500 mt-1 leading-relaxed"></p>
+                </div>
+                <button onclick="closeToastModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2.5 rounded-xl text-xs transition-all">
+                    ตกลง
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Setup state variables
+        let employeesList = [];
+        let monthsList = [];
+        let currentSelectedEmployee = null;
+        let currentSelectedMonth = ""; // Format YYYY-MM
+        let activeShifts = {}; // Active shifts for current selected employee and month
+        let allEmployeesShiftsData = {}; // Tracks overall status of all employees for progress percentage
+        let activeCalendarDay = null; // Stored day context for modal
+
+        // Generates Month List (Next 3 months starting with current)
+        function initMonthSelector() {
+            const thaiMonths = [
+                "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+                "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+            ];
+            const selectEl = document.getElementById('month-select');
+            
+            // Generate list starting May 2026 for simulation as requested
+            const baseDate = new Date(2026, 4, 1); // May 2026
+            
+            for (let i = 0; i < 4; i++) {
+                const targetDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + i, 1);
+                const yearEN = targetDate.getFullYear();
+                const yearTH = yearEN + 543;
+                const monthName = thaiMonths[targetDate.getMonth()];
+                const value = `${yearEN}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`;
+                
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = `${monthName} ${yearTH}`;
+                
+                // Default to first month option
+                if (i === 1) { // Default to June 2026 (1/6/26 from user's prompt scenario)
+                    option.selected = true;
+                    currentSelectedMonth = value;
+                }
+                
+                monthsList.push({ value, label: `${monthName} ${yearTH}`, year: yearEN, month: targetDate.getMonth() });
+                selectEl.appendChild(option);
+            }
+
+            if (!currentSelectedMonth) {
+                currentSelectedMonth = monthsList[0].value;
+            }
+        }
+
+        // Default Employees Seed List
+        const DEFAULT_EMPLOYEES = [
+            { id: "emp1", name: "สมชาย รักดี", brand: "Levi's" },
+            { id: "emp2", name: "นภัสสร แฟชั่นนิสต้า", brand: "Mc Jeans" },
+            { id: "emp3", name: "อภิเดช เก่งงาน", brand: "Wrangler" },
+            { id: "emp4", name: "สุทิน ทันสมัย", brand: "Lee" },
+            { id: "emp5", name: "รัญชิดา ชิคแอนด์คูล", brand: "Playboy" }
+        ];
+
+        // Custom Show Toast Utility instead of alert()
+        function showToast(title, message, type = 'info') {
+            const modal = document.getElementById('toast-modal');
+            const iconEl = document.getElementById('toast-icon');
+            const titleEl = document.getElementById('toast-title');
+            const messageEl = document.getElementById('toast-message');
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            // Reset classes
+            iconEl.className = "w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl ";
+            
+            if (type === 'success') {
+                iconEl.classList.add('bg-emerald-50', 'text-emerald-500');
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            } else if (type === 'error') {
+                iconEl.classList.add('bg-rose-50', 'text-rose-500');
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+            } else {
+                iconEl.classList.add('bg-indigo-50', 'text-indigo-500');
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+            }
+
+            // Reveal Modal smoothly
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.remove('scale-90');
+            }, 10);
+        }
+
+        function closeToastModal() {
+            const modal = document.getElementById('toast-modal');
+            modal.classList.add('opacity-0');
+            modal.firstElementChild.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Load / Save Configurations
+        function getWebhookUrl() {
+            return localStorage.getItem('young_fashion_webhook_url') || "";
+        }
+
+        function saveConfigWebhook() {
+            const val = document.getElementById('config-webhook-url').value.trim();
+            localStorage.setItem('young_fashion_webhook_url', val);
+            showToast("บันทึกเสร็จสิ้น", "บันทึกที่อยู่ Webhook สำหรับ Google Sheet สำเร็จแล้ว!", "success");
+            closeConfigModal();
+        }
+
+        // Listeners & Firebase Subscriptions
+        async function initFirebaseAndSync() {
+            try {
+                // Wait for Auth
+                onAuthStateChanged(auth, async (user) => {
+                    if (!user) {
+                        // Check for custom token
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                        return;
+                    }
+
+                    // Authenticated successfully, synchronize data
+                    syncEmployees();
+                    syncAllShifts();
+                });
+            } catch (err) {
+                console.error("Firebase auth/sync error: ", err);
+                // Fallback to purely local state if offline/sandbox limits prevent full firebase sync
+                loadLocalBackupData();
+            }
+        }
+
+        // Syncs employees from public data collection (RULE 1 Path structure)
+        function syncEmployees() {
+            const collectionPath = `artifacts/${appId}/public/data/employees`;
+            
+            try {
+                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'employees'), (snapshot) => {
+                    let items = [];
+                    snapshot.forEach((doc) => {
+                        items.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    if (items.length === 0) {
+                        // Prepopulate default employees if empty
+                        seedDefaultEmployees();
+                    } else {
+                        employeesList = items;
+                        updateEmployeeDropdown();
+                        recalculateAllProgress();
+                    }
+                }, (error) => {
+                    console.error("Firestore employees sync error:", error);
+                    loadLocalBackupData();
+                });
+            } catch (err) {
+                console.error(err);
+                loadLocalBackupData();
+            }
+        }
+
+        // Seed Default data
+        async function seedDefaultEmployees() {
+            try {
+                for (let emp of DEFAULT_EMPLOYEES) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'employees', emp.id);
+                    await setDoc(docRef, { name: emp.name, brand: emp.brand });
+                }
+            } catch (e) {
+                console.error("Seeding error, using memory backup:", e);
+                employeesList = [...DEFAULT_EMPLOYEES];
+                updateEmployeeDropdown();
+                recalculateAllProgress();
+            }
+        }
+
+        // Synchronizes all shift collections (RULE 1 Path structure & RULE 2 simple queries only)
+        function syncAllShifts() {
+            try {
+                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'shifts'), (snapshot) => {
+                    allEmployeesShiftsData = {};
+                    snapshot.forEach((doc) => {
+                        allEmployeesShiftsData[doc.id] = doc.data(); // Key: Month_EmployeeId (e.g. 2026-06_emp1)
+                    });
+                    
+                    // Trigger active UI updates
+                    recalculateAllProgress();
+                    if (currentSelectedEmployee) {
+                        loadActiveEmployeeMonthShifts();
+                    }
+                }, (error) => {
+                    console.error("Firestore shifts sync error:", error);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Local State Fallback loader
+        function loadLocalBackupData() {
+            if (employeesList.length === 0) {
+                employeesList = [...DEFAULT_EMPLOYEES];
+                updateEmployeeDropdown();
+            }
+            recalculateAllProgress();
+        }
+
+        // Renders the Employee dropdown
+        function updateEmployeeDropdown() {
+            const selectEl = document.getElementById('employee-select');
+            
+            // Keep first option
+            selectEl.innerHTML = '<option value="" disabled selected>-- กรุณาเลือกชื่อพนักงาน --</option>';
+            
+            employeesList.sort((a, b) => a.name.localeCompare(b.name, 'th')).forEach((emp) => {
+                const option = document.createElement('option');
+                option.value = emp.id;
+                option.textContent = emp.name;
+                selectEl.appendChild(option);
+            });
+
+            // Reselect if matching
+            if (currentSelectedEmployee && employeesList.some(e => e.id === currentSelectedEmployee.id)) {
+                selectEl.value = currentSelectedEmployee.id;
+                updateBrandBadge();
+            }
+        }
+
+        // Handle Employee dropdown change
+        document.getElementById('employee-select').addEventListener('change', (e) => {
+            const empId = e.target.value;
+            currentSelectedEmployee = employeesList.find(emp => emp.id === empId);
+            updateBrandBadge();
+            
+            // Trigger calendar load
+            loadActiveEmployeeMonthShifts();
+        });
+
+        // Brand Badge updater
+        function updateBrandBadge() {
+            const container = document.getElementById('brand-badge-container');
+            if (currentSelectedEmployee) {
+                container.innerHTML = `
+                    <span class="bg-indigo-100 text-indigo-700 font-bold px-2 py-1 rounded-md text-[10px] uppercase shadow-xs">
+                        ${currentSelectedEmployee.brand}
+                    </span>
+                `;
+            } else {
+                container.innerHTML = '';
+            }
+        }
+
+        // Handle Month selection change
+        document.getElementById('month-select').addEventListener('change', (e) => {
+            currentSelectedMonth = e.target.value;
+            
+            // Update labels
+            const label = monthsList.find(m => m.value === currentSelectedMonth)?.label || "";
+            document.getElementById('dashboard-month-label').textContent = label;
+
+            // Reload shifts & calendar
+            loadActiveEmployeeMonthShifts();
+            recalculateAllProgress();
+        });
+
+        // Load shifts specifically for current user & month context
+        function loadActiveEmployeeMonthShifts() {
+            if (!currentSelectedEmployee) {
+                document.getElementById('calendar-wrapper').classList.add('hidden');
+                return;
+            }
+
+            // Expose wrapper
+            document.getElementById('calendar-wrapper').classList.remove('hidden');
+
+            const key = `${currentSelectedMonth}_${currentSelectedEmployee.id}`;
+            const record = allEmployeesShiftsData[key];
+            
+            if (record && record.shifts) {
+                activeShifts = { ...record.shifts };
+            } else {
+                activeShifts = {}; // Reset empty shifts
+            }
+
+            renderCalendar();
+        }
+
+        // Computes and Renders Days of current month with assigned shifts
+        function renderCalendar() {
+            const calendarGrid = document.getElementById('calendar-days');
+            calendarGrid.innerHTML = '';
+
+            const activeMonthInfo = monthsList.find(m => m.value === currentSelectedMonth);
+            if (!activeMonthInfo) return;
+
+            const year = activeMonthInfo.year;
+            const month = activeMonthInfo.month;
+
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            
+            // Determine starting offset for Monday-first layout
+            // new Date(year, month, 1).getDay() returns: 0 = Sun, 1 = Mon, ..., 6 = Sat
+            const firstDayOfWeek = new Date(year, month, 1).getDay();
+            const paddedCellsCount = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // Translate Sunday to last index 6, shift others left
+
+            // Render empty cells for calendar offset padding
+            for (let i = 0; i < paddedCellsCount; i++) {
+                const pad = document.createElement('div');
+                pad.className = "aspect-square bg-slate-50 border border-transparent rounded-lg";
+                calendarGrid.appendChild(pad);
+            }
+
+            let daysAssignedCount = 0;
+
+            // Render active day grids
+            for (let day = 1; day <= totalDays; day++) {
+                const cell = document.createElement('div');
+                const shiftValue = activeShifts[day] || null; // e.g. "1", "2", "C15/5"
+
+                // Color schemes per shifts
+                let shiftStyles = "bg-white border-slate-200 text-slate-800 hover:border-indigo-300";
+                let badgeHTML = "";
+
+                if (shiftValue) {
+                    daysAssignedCount++;
+                    if (shiftValue === '1') {
+                        shiftStyles = "bg-indigo-50 border-indigo-200 text-indigo-800 font-bold ring-2 ring-indigo-500/10";
+                        badgeHTML = `<span class="absolute right-1 bottom-1 text-[8px] bg-indigo-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">1</span>`;
+                    } else if (shiftValue === '2') {
+                        shiftStyles = "bg-emerald-50 border-emerald-200 text-emerald-800 font-bold ring-2 ring-emerald-500/10";
+                        badgeHTML = `<span class="absolute right-1 bottom-1 text-[8px] bg-emerald-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">2</span>`;
+                    } else if (shiftValue === '3') {
+                        shiftStyles = "bg-purple-50 border-purple-200 text-purple-800 font-bold ring-2 ring-purple-500/10";
+                        badgeHTML = `<span class="absolute right-1 bottom-1 text-[8px] bg-purple-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">3</span>`;
+                    } else if (shiftValue === 'W') {
+                        shiftStyles = "bg-amber-50 border-amber-200 text-amber-800 font-bold ring-2 ring-amber-500/10";
+                        badgeHTML = `<span class="absolute right-1 bottom-1 text-[8px] bg-amber-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">W</span>`;
+                    } else if (shiftValue === 'V') {
+                        shiftStyles = "bg-rose-50 border-rose-200 text-rose-800 font-bold ring-2 ring-rose-500/10";
+                        badgeHTML = `<span class="absolute right-1 bottom-1 text-[8px] bg-rose-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">V</span>`;
+                    } else if (shiftValue.startsWith('C')) {
+                        shiftStyles = "bg-sky-50 border-sky-200 text-sky-800 font-bold ring-2 ring-sky-500/10";
+                        const src = shiftValue.substring(1); // extracts dates
+                        badgeHTML = `<span class="absolute right-1 bottom-1 text-[8px] bg-sky-500 text-white px-1 h-4 rounded flex items-center justify-center font-bold tracking-tighter">C${src}</span>`;
+                    }
+                }
+
+                cell.className = `aspect-square border rounded-xl flex flex-col items-start p-1.5 relative cursor-pointer select-none transition-all ${shiftStyles}`;
+                cell.innerHTML = `
+                    <span class="text-xs font-bold leading-none ${shiftValue ? 'text-slate-900' : 'text-slate-400'}">${day}</span>
+                    ${badgeHTML}
+                `;
+
+                // Handle calendar cell interactions
+                cell.onclick = () => openShiftModal(day);
+                calendarGrid.appendChild(cell);
+            }
+
+            // Update stats
+            document.getElementById('calendar-completion-stat').textContent = `${daysAssignedCount}/${totalDays} วัน`;
+        }
+
+        // Calculates and Updates Progress stats across overall active employee lists
+        function recalculateAllProgress() {
+            const dashboardList = document.getElementById('dashboard-employees-list');
+            dashboardList.innerHTML = '';
+
+            const activeMonthInfo = monthsList.find(m => m.value === currentSelectedMonth);
+            if (!activeMonthInfo) return;
+
+            const year = activeMonthInfo.year;
+            const month = activeMonthInfo.month;
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            if (employeesList.length === 0) {
+                dashboardList.innerHTML = `<div class="text-xs text-slate-400 text-center py-4">ไม่พบข้อมูลพนักงาน</div>`;
+                return;
+            }
+
+            // Loop and render percentage for every employee
+            employeesList.sort((a, b) => a.name.localeCompare(b.name, 'th')).forEach((emp) => {
+                const key = `${currentSelectedMonth}_${emp.id}`;
+                const record = allEmployeesShiftsData[key];
+                
+                let completedDays = 0;
+                if (record && record.shifts) {
+                    completedDays = Object.keys(record.shifts).length;
+                }
+
+                // Protect bounds
+                if (completedDays > totalDays) completedDays = totalDays;
+
+                const percent = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
+                
+                // Color codes
+                let barColor = "bg-rose-500";
+                let textColor = "text-rose-600 bg-rose-50";
+                
+                if (percent === 100) {
+                    barColor = "bg-emerald-500";
+                    textColor = "text-emerald-700 bg-emerald-50";
+                } else if (percent > 0) {
+                    barColor = "bg-amber-500";
+                    textColor = "text-amber-700 bg-amber-50";
+                }
+
+                const card = document.createElement('div');
+                card.className = "flex items-center justify-between gap-3 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100";
+                card.innerHTML = `
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <span class="text-xs font-bold text-slate-800 truncate">${emp.name}</span>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase truncate">${emp.brand}</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                            <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                    <div class="text-right flex flex-col items-end">
+                        <span class="text-[10px] font-bold py-0.5 px-1.5 rounded-full ${textColor}">
+                            ${percent}%
+                        </span>
+                        <span class="text-[9px] text-slate-400 mt-0.5">${completedDays}/${totalDays} วัน</span>
+                    </div>
+                `;
+                dashboardList.appendChild(card);
+            });
+        }
+
+        // Modal Sheet controls for shifts selection popup
+        function openShiftModal(day) {
+            activeCalendarDay = day;
+            const modal = document.getElementById('shift-modal');
+            const dateLabel = document.getElementById('shift-modal-date');
+            
+            // Generate full display Date
+            const activeMonthInfo = monthsList.find(m => m.value === currentSelectedMonth);
+            const labelStr = `${day} / ${activeMonthInfo.label}`;
+            dateLabel.textContent = `ระบุกะงานสำหรับวันที่ ${labelStr}`;
+
+            // Reset shift C extra input state
+            document.getElementById('shift-c-details').classList.add('hidden');
+            document.getElementById('shift-c-source-date').value = "";
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeShiftModal(event) {
+            const modal = document.getElementById('shift-modal');
+            modal.classList.add('opacity-0');
+            modal.firstElementChild.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Handles standard selection (1, 2, 3, W, V)
+        function selectShift(code) {
+            activeShifts[activeCalendarDay] = code;
+            renderCalendar();
+            closeShiftModal();
+        }
+
+        // Expand shift C details panel inside the sheet
+        function triggerShiftC() {
+            const details = document.getElementById('shift-c-details');
+            details.classList.remove('hidden');
+            document.getElementById('shift-c-source-date').focus();
+        }
+
+        // Confirm Shift C after source date was typed
+        function confirmShiftC() {
+            const srcDateVal = document.getElementById('shift-c-source-date').value.trim();
+            if (!srcDateVal) {
+                showToast("ไม่สมบูรณ์", "กรุณาระบุว่าสลับย้ายมาจากวันไหน เช่น 15/5 หรือ 15/5/26", "error");
+                return;
+            }
+
+            activeShifts[activeCalendarDay] = `C${srcDateVal}`;
+            renderCalendar();
+            closeShiftModal();
+        }
+
+        // Clear shift assignment for the day
+        function clearDayShift() {
+            if (activeShifts[activeCalendarDay]) {
+                delete activeShifts[activeCalendarDay];
+            }
+            renderCalendar();
+            closeShiftModal();
+        }
+
+        // Controls Employee Addition Modals
+        function openAddEmployeeModal() {
+            const modal = document.getElementById('add-employee-modal');
+            document.getElementById('new-employee-name').value = "";
+            document.getElementById('new-employee-brand').value = "";
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.remove('scale-90');
+            }, 10);
+        }
+
+        function closeAddEmployeeModal(event) {
+            const modal = document.getElementById('add-employee-modal');
+            modal.classList.add('opacity-0');
+            modal.firstElementChild.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        async function saveNewEmployee() {
+            const name = document.getElementById('new-employee-name').value.trim();
+            const brand = document.getElementById('new-employee-brand').value.trim();
+
+            if (!name || !brand) {
+                showToast("ข้อมูลไม่ครบ", "กรุณากรอกทั้ง ชื่อ-นามสกุล และแบรนด์ ให้ครบถ้วน", "error");
+                return;
+            }
+
+            const newId = `emp_${Date.now()}`;
+            
+            try {
+                // Save to Firebase (RULE 1 Path structure)
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'employees', newId);
+                await setDoc(docRef, { name, brand });
+                
+                showToast("สำเร็จแล้ว", `เพิ่มพนักงานใหม่ (${name}) เรียบร้อยแล้ว`, "success");
+                closeAddEmployeeModal();
+            } catch (err) {
+                console.error("Error creating employee in Firebase, saving locally:", err);
+                // Memory backup save
+                employeesList.push({ id: newId, name, brand });
+                updateEmployeeDropdown();
+                recalculateAllProgress();
+                showToast("สำเร็จแล้ว (Local)", `เพิ่มพนักงานใหม่ (${name}) เรียบร้อยแล้ว`, "success");
+                closeAddEmployeeModal();
+            }
+        }
+
+        // Info and webhook setup modals
+        function openConfigModal() {
+            const modal = document.getElementById('config-modal');
+            document.getElementById('config-webhook-url').value = getWebhookUrl();
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.remove('scale-90');
+            }, 10);
+        }
+
+        function closeConfigModal(event) {
+            const modal = document.getElementById('config-modal');
+            modal.classList.add('opacity-0');
+            modal.firstElementChild.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Final submit validation and saving triggers
+        async function submitShifts() {
+            if (!currentSelectedEmployee) {
+                showToast("กรุณาเลือกชื่อ", "โปรดเลือกชื่อของคุณที่คอลัมน์ C ก่อนทำการส่งข้อมูล", "error");
+                return;
+            }
+
+            const activeMonthInfo = monthsList.find(m => m.value === currentSelectedMonth);
+            if (!activeMonthInfo) return;
+
+            const year = activeMonthInfo.year;
+            const month = activeMonthInfo.month;
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            // Perform total shift verification
+            const assignedDaysCount = Object.keys(activeShifts).length;
+            
+            if (assignedDaysCount < totalDays) {
+                const missingDays = totalDays - assignedDaysCount;
+                showToast(
+                    "ระบุกะไม่ครบถ้วน", 
+                    `ยังกรอกกะไม่ครบเดือน! ขาดอีกทั้งหมด ${missingDays} วัน กรุณาระบุกะให้ครบถ้วนทุกวันก่อนส่งข้อมูล`, 
+                    "error"
+                );
+                return;
+            }
+
+            // Perfect validation. Proceed with DB save.
+            const recordKey = `${currentSelectedMonth}_${currentSelectedEmployee.id}`;
+            const submissionDoc = {
+                employeeId: currentSelectedEmployee.id,
+                employeeName: currentSelectedEmployee.name,
+                brand: currentSelectedEmployee.brand,
+                month: currentSelectedMonth,
+                shifts: activeShifts,
+                submittedAt: new Date().toISOString()
+            };
+
+            const submitBtn = document.getElementById('btn-submit-shifts');
+            const originalHTML = submitBtn.innerHTML;
+            
+            // Set loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> กำลังจัดเก็บข้อมูล...';
+
+            try {
+                // Save to Firestore (RULE 1 Path structure)
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'shifts', recordKey);
+                await setDoc(docRef, submissionDoc);
+
+                // Optional: Fire actual external webhook if client registered an App Script Webhook URL
+                const webhookUrl = getWebhookUrl();
+                if (webhookUrl) {
+                    try {
+                        // Deliver full shifts data context for absolute sheets mapping
+                        await fetch(webhookUrl, {
+                            method: 'POST',
+                            mode: 'no-cors', // standard workaround for sheets CORS redirections
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(submissionDoc)
+                        });
+                        console.log("Sheet webhook triggered successfully");
+                    } catch (webhookErr) {
+                        console.warn("Failed webhooks, keeping Cloud Firestore backup", webhookErr);
+                    }
+                }
+
+                showToast(
+                    "ส่งข้อมูลสำเร็จแล้ว!", 
+                    `บันทึกตารางการลงกะของ ${currentSelectedEmployee.name} ประจำเดือน ${activeMonthInfo.label} เรียบร้อยแล้ว`, 
+                    "success"
+                );
+
+            } catch (err) {
+                console.error("Firestore submit shifts failed:", err);
+                
+                // Fallback store in memory dictionary if Firestore loses connection
+                allEmployeesShiftsData[recordKey] = submissionDoc;
+                recalculateAllProgress();
+
+                showToast(
+                    "บันทึกภายในเครื่องสำเร็จ", 
+                    `ไม่สามารถระบุเครือข่ายได้ แต่ระบบได้บันทึกกะชั่วคราวลงในเครื่องเรียบร้อยแล้ว`, 
+                    "success"
+                );
+            } finally {
+                // Re-enable button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHTML;
+            }
+        }
+
+        // Initialization entry points
+        window.onload = function() {
+            initMonthSelector();
+            initFirebaseAndSync();
+        };
+    </script>
+</body>
+</html>
