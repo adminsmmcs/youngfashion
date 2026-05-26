@@ -26,7 +26,7 @@
                     <h1 class="text-xl font-bold tracking-tight text-white mb-0.5">ตารางการทำงาน พนักงานขาย/PC/BA</h1>
                     <p class="text-indigo-200 text-sm font-medium flex items-center gap-1.5">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        แผนก Young Fashion (ดึงชื่อจาก Google Sheets)
+                        แผนก Young Fashion (ระบบดึงข้อมูล 2-Way Sync)
                     </p>
                 </div>
             </div>
@@ -64,10 +64,14 @@
                 </div>
             </div>
 
+            <div id="sync-loader" class="bg-indigo-50 text-indigo-700 p-4 rounded-2xl border border-indigo-100 flex items-center justify-center gap-3 text-xs font-medium hidden">
+                <i class="fa-solid fa-spinner animate-spin text-base"></i> กำลังดึงข้อมูลกะงานเดิมของคุณจาก Google Sheets...
+            </div>
+
             <div id="calendar-wrapper" class="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden hidden">
                 <div class="bg-indigo-50/50 px-4 py-3 border-b border-indigo-100 flex justify-between items-center">
                     <span class="text-xs font-bold text-indigo-800 uppercase tracking-wide flex items-center gap-1.5">
-                        <i class="fa-solid fa-calendar text-indigo-600"></i> แตะวันที่เพื่อบันทึกกะการทำงาน
+                        <i class="fa-solid fa-calendar text-indigo-600"></i> ตารางเวลายื่นกะงานของคุณ
                     </span>
                     <span id="calendar-completion-stat" class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
                         0/0 วัน
@@ -97,7 +101,7 @@
                 </div>
             </div>
 
-            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 space-y-3">
+            <div id="progress-wrapper" class="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 space-y-3 hidden">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                         <i class="fa-solid fa-chart-pie text-indigo-600"></i> ความคืบหน้าการกรอกข้อมูลของคุณ
@@ -111,7 +115,7 @@
 
         <div class="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-5 py-4 flex flex-col gap-2 shadow-2xl z-20 rounded-t-3xl">
             <button id="btn-submit-shifts" onclick="submitShifts()" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-800 text-white font-semibold py-3.5 rounded-xl shadow-lg hover:from-indigo-700 hover:to-indigo-900 transition-all active:scale-[0.98] flex justify-center items-center gap-2 text-sm">
-                <i class="fa-solid fa-paper-plane"></i> ส่งตารางกะการทำงานไปยังแถวของตนเอง
+                <i class="fa-solid fa-paper-plane"></i> บันทึก / อัปเดตตารางกะงานลงซีต
             </button>
         </div>
 
@@ -182,8 +186,8 @@
     </div>
 
     <script>
-        // วาง Web App URL ที่ได้จากการ Deploy ในหัวข้อบนลงตรงนี้ครับ
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzF3tN6_8CfUvr3yFjZYKaqDNnTdqJV0oaAu7ZFgKNRyMhqkiTrlBX04dO0Sssc73YB/exec";
+        // ใช้ลิงก์ Apps Script อันเดิมของคุณ
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwXrpos8c9OFiB1Wutaw5XegmTzCtyQar_FSC3n8WWW0ThHJZc-qvxWKnvExldYuyn/exec";
 
         let employeesList = [];
         let monthsList = [];
@@ -192,7 +196,7 @@
         let activeShifts = {}; 
         let activeCalendarDay = null; 
 
-        // ดึงรายชื่อจากคอลัมน์ C ใน Google Sheets ผ่านฟังก์ชัน doGet
+        // ดึงรายชื่อจากคอลัมน์ C ใน Google Sheets
         async function fetchEmployeesFromSheet() {
             const selectEl = document.getElementById('employee-select');
             try {
@@ -263,16 +267,49 @@
             loadActiveShifts();
         });
 
-        function loadActiveShifts() {
+        // ฟังก์ชันสำคัญ: วิ่งไปดึงข้อมูลกะงานเดิมจาก Sheet แบบ Real-time
+        async function loadActiveShifts() {
             if (!currentSelectedEmployee) {
                 document.getElementById('calendar-wrapper').classList.add('hidden');
+                document.getElementById('progress-wrapper').classList.add('hidden');
                 return;
             }
-            document.getElementById('calendar-wrapper').classList.remove('hidden');
-            const savedShifts = localStorage.getItem(`shifts_${currentSelectedMonth}_${currentSelectedEmployee.id}`);
-            activeShifts = savedShifts ? JSON.parse(savedShifts) : {};
-            renderCalendar();
-            renderProgress();
+
+            const loader = document.getElementById('sync-loader');
+            const calendarWrap = document.getElementById('calendar-wrapper');
+            const progressWrap = document.getElementById('progress-wrapper');
+
+            // แสดงสถานะกำลังโหลด และซ่อนตารางไว้ก่อน
+            loader.classList.remove('hidden');
+            calendarWrap.classList.add('hidden');
+            progressWrap.classList.add('hidden');
+
+            try {
+                // ยิง API ไปที่ doGet พร้อมแนบพารามิเตอร์ชื่อพนักงาน
+                const fetchUrl = `${APPS_SCRIPT_URL}?action=getShifts&name=${encodeURIComponent(currentSelectedEmployee.name)}&month=${currentSelectedMonth}`;
+                const response = await fetch(fetchUrl);
+                const data = await response.json();
+                
+                // หากเจอข้อมูลกะงานเก่า ให้เอามาใส่ในปฏิทิน
+                if (data && data.shifts) {
+                    activeShifts = data.shifts;
+                } else {
+                    activeShifts = {};
+                }
+            } catch (err) {
+                console.error("Failed to fetch pre-existing shifts:", err);
+                // แผนสำรอง: ดึงจากความจำเครื่อง (LocalStorage) หากดึงจากอินเทอร์เน็ตล้มเหลว
+                const savedShifts = localStorage.getItem(`shifts_${currentSelectedMonth}_${currentSelectedEmployee.id}`);
+                activeShifts = savedShifts ? JSON.parse(savedShifts) : {};
+            } finally {
+                // ซ่อนตัวโหลด และแสดงปฏิทินที่มีข้อมูลครบถ้วน
+                loader.classList.add('hidden');
+                calendarWrap.classList.remove('hidden');
+                progressWrap.classList.remove('hidden');
+                
+                renderCalendar();
+                renderProgress();
+            }
         }
 
         function renderCalendar() {
@@ -376,16 +413,11 @@
             closeShiftModal();
         }
 
-        // ส่งข้อมูลแบบบันทึกทับในแถวเดิมของชื่อพนักงานคนนั้นๆ
         async function submitShifts() {
             if (!currentSelectedEmployee) return;
 
             const activeMonthInfo = monthsList.find(m => m.value === currentSelectedMonth);
             const totalDays = new Date(activeMonthInfo.year, activeMonthInfo.month + 1, 0).getDate();
-            if (Object.keys(activeShifts).length < totalDays) {
-                showToast("ข้อมูลไม่ครบ", `กรุณากรอกตารางกะให้ครบทุกวันประจำเดือนก่อนทำการส่งข้อมูล`, "error");
-                return;
-            }
 
             const submissionDoc = {
                 employeeName: currentSelectedEmployee.name,
@@ -397,7 +429,7 @@
             const submitBtn = document.getElementById('btn-submit-shifts');
             const originalHTML = submitBtn.innerHTML;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> กำลังบันทึกข้อมูลเข้าแถวของคุณ...';
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> กำลังบันทึกข้อมูลเข้าชีต...';
 
             try {
                 await fetch(APPS_SCRIPT_URL, {
@@ -406,7 +438,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(submissionDoc)
                 });
-                showToast("บันทึกสำเร็จ", `ระบบอัปเดตข้อมูลตารางกะในแถวของ ${currentSelectedEmployee.name} บน Google Sheet เรียบร้อยแล้ว`, "success");
+                showToast("บันทึกสำเร็จ", `ระบบอัปเดตตารางกะบน Google Sheet ของคุณเรียบร้อยแล้ว`, "success");
             } catch (err) {
                 console.error(err);
                 showToast("เกิดข้อผิดพลาด", "ไม่สามารถอัปเดตข้อมูลได้ กรุณาลองใหม่อีกครั้ง", "error");
