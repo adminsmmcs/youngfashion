@@ -81,8 +81,8 @@
                     </span>
                 </div>
                 
-                <div class="p-4">
-                    <div class="grid grid-cols-7 gap-1.5 text-center mb-2">
+                <div class="p-3">
+                    <div class="grid grid-cols-7 gap-1 text-center mb-2">
                         <div class="text-xs font-bold text-slate-500">จ</div>
                         <div class="text-xs font-bold text-slate-500">อ</div>
                         <div class="text-xs font-bold text-slate-500">พ</div>
@@ -91,7 +91,7 @@
                         <div class="text-xs font-bold text-emerald-600">ส</div>
                         <div class="text-xs font-bold text-rose-600">อา</div>
                     </div>
-                    <div id="calendar-days" class="grid grid-cols-7 gap-1.5"></div>
+                    <div id="calendar-days" class="grid grid-cols-7 gap-1"></div>
                 </div>
 
                 <div class="mx-4 mb-4 p-3 bg-indigo-50/60 rounded-xl border border-indigo-100">
@@ -203,7 +203,7 @@
     </div>
 
     <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwLmRLoUrXyh1eSEO_uxux0r0bi8i47fmgyZaU3B0mpXlZvw4YDsyckP5QwqPz8Dc42/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxigcOGvsp2PJh5_vkNveSX2HmlV6LK2s8nCjW2u_fGMXFOqgwCccg5NimFEWvBf1TC/exec";
 
         let employeesList = [];
         let sheetShiftsCache = {}; 
@@ -230,7 +230,6 @@
             }
         }
 
-        // ปรับแก้จุดนี้: ให้ส่งพารามิเตอร์ของเดือนไปด้วยเวลาดึงข้อมูลครั้งแรก
         async function fetchInitialDataFromSheet() {
             const selectEl = document.getElementById('employee-select');
             const loader = document.getElementById('sync-loader');
@@ -246,7 +245,7 @@
                     updateEmployeeDropdown();
                     selectEl.disabled = false;
                     renderProgressDashboard(); 
-                    loader.classList.add('hidden'); // ซ่อนตัวโหลดหลักเมื่อซิงค์สำเร็จ
+                    loader.classList.add('hidden'); 
                 } else {
                     selectEl.innerHTML = '<option value="" disabled selected>-- ไม่พบข้อมูลรายชื่อในคอลัมน์ C --</option>';
                 }
@@ -305,7 +304,6 @@
             currentSelectedMonth = e.target.value;
             document.getElementById('dashboard-month-label').textContent = monthsList.find(m => m.value === currentSelectedMonth)?.label || "";
             
-            // หาก Admin เปลี่ยนเดือน ให้วิ่งไปโหลดชี้ข้อมูลกะงานของเดือนใหม่จากซีตทันที
             document.getElementById('sync-loader').classList.remove('hidden');
             await fetchInitialDataFromSheet();
             loadActiveShifts();
@@ -328,6 +326,7 @@
             calculateShiftSummary(); 
         }
 
+        // 🌟 แก้ไขจุดนี้: ปรับเงื่อนไขให้ตัดคำแสดงค่า C พร้อมวันที่เต็มรูปได้อย่างลงตัวไม่ล้นช่องปฏิทิน
         function renderCalendar() {
             const calendarGrid = document.getElementById('calendar-days');
             calendarGrid.innerHTML = '';
@@ -356,10 +355,14 @@
                     else if (shiftValue === '3') { shiftStyles = "bg-purple-50 border-purple-200 text-purple-800 font-bold ring-2 ring-purple-500/10"; badgeHTML = `<span class="absolute right-1 bottom-1 text-[8px] bg-purple-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">3</span>`; }
                     else if (shiftValue === 'W') { shiftStyles = "bg-amber-50 border-amber-200 text-amber-800 font-bold ring-2 ring-amber-500/10"; badgeHTML = `<span class="absolute right-1 bottom-1 text-[8px] bg-amber-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">W</span>`; }
                     else if (shiftValue === 'V') { shiftStyles = "bg-rose-50 border-rose-200 text-rose-800 font-bold ring-2 ring-rose-500/10"; badgeHTML = `<span class="absolute right-1 bottom-1 text-[8px] bg-rose-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">V</span>`; }
-                    else if (shiftValue.startsWith('C')) { shiftStyles = "bg-sky-50 border-sky-200 text-sky-800 font-bold ring-2 ring-sky-500/10"; badgeHTML = `<span class="absolute right-1 bottom-1 text-[8px] bg-sky-500 text-white px-1 h-4 rounded flex items-center justify-center font-bold">C</span>`; }
+                    else if (shiftValue.startsWith('C')) { 
+                        shiftStyles = "bg-sky-50 border-sky-200 text-sky-800 font-bold ring-2 ring-sky-500/10"; 
+                        // แก้ไข: นำตัวอักษรทั้งหมด (เช่น C15/5) มาแสดงผล และปรับความยาวให้ยืดหยุ่นด้วยแนวนอน (px-1) และใช้ฟอนต์เล็กกะทัดรัด (text-[7.5px])
+                        badgeHTML = `<span class="absolute right-0.5 bottom-0.5 text-[7.5px] bg-sky-500 text-white px-1 py-0.5 rounded-md flex items-center justify-center font-bold max-w-[90%] tracking-tighter truncate">${shiftValue}</span>`; 
+                    }
                 }
 
-                cell.className = `aspect-square border rounded-xl flex flex-col items-start p-1.5 relative cursor-pointer select-none transition-all ${shiftStyles}`;
+                cell.className = `aspect-square border rounded-xl flex flex-col items-start p-1 relative cursor-pointer select-none transition-all ${shiftStyles}`;
                 cell.innerHTML = `<span class="text-xs font-bold leading-none ${shiftValue ? 'text-slate-900' : 'text-slate-400'}">${day}</span>${badgeHTML}`;
                 cell.onclick = () => openShiftModal(day);
                 calendarGrid.appendChild(cell);
@@ -445,9 +448,11 @@
 
         function selectShift(code) { activeShifts[activeCalendarDay] = code; saveCurrentShifts(); }
         function triggerShiftC() { document.getElementById('shift-c-details').classList.remove('hidden'); document.getElementById('shift-c-source-date').focus(); }
+        
         function confirmShiftC() {
             const srcDateVal = document.getElementById('shift-c-source-date').value.trim();
             if (!srcDateVal) return;
+            // บันทึกคำว่า C นำหน้าตามด้วยสิ่งที่กรอก เช่น C15/5 หรือ C15/5/26 เข้าสู่ระบบ
             activeShifts[activeCalendarDay] = `C${srcDateVal}`;
             saveCurrentShifts();
         }
@@ -515,7 +520,7 @@
         window.onload = function() {
             checkAdminRole(); 
             initMonthSelector(); 
-            fetchInitialDataFromSheet(); // ดึงข้อมูลทันทีตามเดือนปัจจุบันที่หน้าเว็บเลือกอยู่
+            fetchInitialDataFromSheet(); 
         };
     </script>
 </body>
