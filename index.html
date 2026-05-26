@@ -478,10 +478,10 @@ function doPost(e) {
             }, 300);
         }
 
-        // Load / Save Configurations
-        function getWebhookUrl() {
-            return localStorage.getItem('young_fashion_webhook_url') || "";
-        }
+        // แก้ไขฟังก์ชันเดิมให้ Return URL ของคุณออกไปตรงๆ
+function getWebhookUrl() {
+    return "https://script.google.com/macros/s/AKfycbxigcOGvsp2PJh5_vkNveSX2HmlV6LK2s8nCjW2u_fGMXFOqgwCccg5NimFEWvBf1TC/exec";
+}
 
         function saveConfigWebhook() {
             const val = document.getElementById('config-webhook-url').value.trim();
