@@ -26,9 +26,10 @@
                     <h1 class="text-xl font-bold tracking-tight text-white mb-0.5">ตารางการทำงาน พนักงานขาย/PC/BA</h1>
                     <p class="text-indigo-200 text-sm font-medium flex items-center gap-1.5">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        แผนก Young Fashion (ระบบดึงข้อมูล 2-Way Sync)
+                        แผนก Young Fashion
                     </p>
                 </div>
+                <div id="admin-badge" class="hidden bg-red-500/30 text-red-200 border border-red-500/40 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold">Admin Mode</div>
             </div>
         </header>
 
@@ -36,14 +37,17 @@
             
             <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-4 shadow-sm">
                 <div>
-                    <label for="month-select" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
-                        <i class="fa-regular fa-calendar-days text-indigo-600 mr-1"></i> เลือกเดือนที่ต้องการลงกะ
-                    </label>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label for="month-select" class="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            <i class="fa-regular fa-calendar-days text-indigo-600 mr-1"></i> เลือกเดือนที่ต้องการลงกะ
+                        </label>
+                        <span id="month-lock-msg" class="text-[10px] text-amber-600 font-medium"><i class="fa-solid fa-lock"></i> เฉพาะ Admin เท่านั้น</span>
+                    </div>
                     <div class="relative">
-                        <select id="month-select" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none shadow-sm transition-all text-slate-700">
+                        <select id="month-select" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-3 text-sm font-medium focus:outline-none appearance-none shadow-sm transition-all text-slate-500 cursor-not-allowed" disabled>
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                            <i class="fa-solid fa-lock text-xs"></i>
                         </div>
                     </div>
                 </div>
@@ -65,7 +69,7 @@
             </div>
 
             <div id="sync-loader" class="bg-indigo-50 text-indigo-700 p-4 rounded-2xl border border-indigo-100 flex items-center justify-center gap-3 text-xs font-medium hidden">
-                <i class="fa-solid fa-spinner animate-spin text-base"></i> กำลังดึงข้อมูลกะงานเดิมของคุณจาก Google Sheets...
+                <i class="fa-solid fa-spinner animate-spin text-base"></i> กำลังซิงค์ตารางกะงานกับ Google Sheets...
             </div>
 
             <div id="calendar-wrapper" class="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden hidden">
@@ -91,6 +95,18 @@
                     <div id="calendar-days" class="grid grid-cols-7 gap-1.5"></div>
                 </div>
 
+                <div class="mx-4 mb-4 p-3 bg-indigo-50/60 rounded-xl border border-indigo-100">
+                    <p class="text-[11px] font-bold text-indigo-900 uppercase tracking-wide mb-2"><i class="fa-solid fa-calculator mr-1"></i> สรุปจำนวนวันทำงานประจำเดือน</p>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-white p-1.5 rounded-lg border border-slate-100 shadow-2xs"><span class="block text-[10px] font-medium text-slate-500">กะ 1</span><span id="count-1" class="text-xs font-bold text-indigo-600">0 วัน</span></div>
+                        <div class="bg-white p-1.5 rounded-lg border border-slate-100 shadow-2xs"><span class="block text-[10px] font-medium text-slate-500">กะ 2</span><span id="count-2" class="text-xs font-bold text-emerald-600">0 วัน</span></div>
+                        <div class="bg-white p-1.5 rounded-lg border border-slate-100 shadow-2xs"><span class="block text-[10px] font-medium text-slate-500">กะ 3</span><span id="count-3" class="text-xs font-bold text-purple-600">0 วัน</span></div>
+                        <div class="bg-white p-1.5 rounded-lg border border-slate-100 shadow-2xs"><span class="block text-[10px] font-medium text-slate-500">หยุดประจำ (W)</span><span id="count-W" class="text-xs font-bold text-amber-600">0 วัน</span></div>
+                        <div class="bg-white p-1.5 rounded-lg border border-slate-100 shadow-2xs"><span class="block text-[10px] font-medium text-slate-500">พักร้อน (V)</span><span id="count-V" class="text-xs font-bold text-rose-600">0 วัน</span></div>
+                        <div class="bg-white p-1.5 rounded-lg border border-slate-100 shadow-2xs"><span class="block text-[10px] font-medium text-slate-500">สลับวันหยุด (C)</span><span id="count-C" class="text-xs font-bold text-sky-600">0 วัน</span></div>
+                    </div>
+                </div>
+
                 <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 grid grid-cols-3 gap-2 text-[11px] text-slate-500">
                     <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-indigo-500 inline-block"></span>กะ 1 (9:30-19:00)</div>
                     <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-emerald-500 inline-block"></span>กะ 2 (10:30-20:00)</div>
@@ -101,14 +117,16 @@
                 </div>
             </div>
 
-            <div id="progress-wrapper" class="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 space-y-3 hidden">
+            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 space-y-3">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                        <i class="fa-solid fa-chart-pie text-indigo-600"></i> ความคืบหน้าการกรอกข้อมูลของคุณ
+                        <i class="fa-solid fa-users text-indigo-600"></i> ตรวจสอบสถานะพนักงานทั้งหมดในชีต
                     </h3>
                     <span id="dashboard-month-label" class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md"></span>
                 </div>
-                <div id="dashboard-employees-list" class="space-y-3"></div>
+                <div id="dashboard-employees-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
+                    <p class="text-center text-xs text-slate-400 py-4">กำลังคำนวณสถานะพนักงาน...</p>
+                </div>
             </div>
 
         </main>
@@ -186,39 +204,61 @@
     </div>
 
     <script>
-        // ใช้ลิงก์ Apps Script อันเดิมของคุณ
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwXrpos8c9OFiB1Wutaw5XegmTzCtyQar_FSC3n8WWW0ThHJZc-qvxWKnvExldYuyn/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxigcOGvsp2PJh5_vkNveSX2HmlV6LK2s8nCjW2u_fGMXFOqgwCccg5NimFEWvBf1TC/exec";
 
         let employeesList = [];
+        let sheetShiftsCache = {}; // เก็บข้อมูลกะงานทั้งหมดของทุกคนจาก Google Sheet
         let monthsList = [];
         let currentSelectedEmployee = null;
         let currentSelectedMonth = ""; 
         let activeShifts = {}; 
         let activeCalendarDay = null; 
+        let isAdmin = false;
 
-        // ดึงรายชื่อจากคอลัมน์ C ใน Google Sheets
-        async function fetchEmployeesFromSheet() {
+        // ฟังก์ชันเช็กสิทธิ์ Admin จาก URL Parameter (?role=admin)
+        function checkAdminRole() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('role') === 'admin') {
+                isAdmin = true;
+                document.getElementById('admin-badge').classList.remove('hidden');
+                
+                const monthSelect = document.getElementById('month-select');
+                monthSelect.disabled = false;
+                monthSelect.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                monthSelect.classList.add('bg-white', 'text-slate-700');
+                
+                document.getElementById('month-lock-msg').innerHTML = '<span class="text-emerald-600"><i class="fa-solid fa-unlock"></i> ปลดล็อกสิทธิ์ Admin</span>';
+                // ปล่อยให้แสดงรูปศรชี้ลงปกติ
+                monthSelect.nextElementSibling.innerHTML = '<i class="fa-solid fa-chevron-down text-xs"></i>';
+            }
+        }
+
+        // ดึงรายชื่อและข้อมูลกะงานพนักงานทุกคน
+        async function fetchInitialDataFromSheet() {
             const selectEl = document.getElementById('employee-select');
             try {
                 const response = await fetch(APPS_SCRIPT_URL);
                 const data = await response.json();
                 
-                if(data && data.length > 0) {
-                    employeesList = data;
+                if(data && data.employees) {
+                    employeesList = data.employees;
+                    sheetShiftsCache = data.allShifts || {}; // เก็บข้อมูลกะงานของพนักงานทั้งหมดไว้
+                    
                     updateEmployeeDropdown();
                     selectEl.disabled = false;
+                    renderProgressDashboard(); // วาดตารางตรวจสอบสถานะทุกคน
                 } else {
                     selectEl.innerHTML = '<option value="" disabled selected>-- ไม่พบข้อมูลรายชื่อในคอลัมน์ C --</option>';
                 }
             } catch (err) {
-                console.error("Fetch employees failed:", err);
-                selectEl.innerHTML = '<option value="" disabled selected>-- โหลดรายชื่อล้มเหลว กรุณารีเฟรช --</option>';
-                showToast("ข้อผิดพลาด", "ไม่สามารถดึงรายชื่อพนักงานจาก Google Sheet ได้", "error");
+                console.error("Fetch data failed:", err);
+                selectEl.innerHTML = '<option value="" disabled selected>-- โหลดข้อมูลล้มเหลว กรุณารีเฟรช --</option>';
+                showToast("ข้อผิดพลาด", "ไม่สามารถดึงข้อมูลจาก Google Sheet ได้", "error");
             }
         }
 
         function initMonthSelector() {
-            const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "เดซันวาคม"];
             const selectEl = document.getElementById('month-select');
             const baseDate = new Date(2026, 4, 1); 
             
@@ -267,49 +307,22 @@
             loadActiveShifts();
         });
 
-        // ฟังก์ชันสำคัญ: วิ่งไปดึงข้อมูลกะงานเดิมจาก Sheet แบบ Real-time
-        async function loadActiveShifts() {
+        function loadActiveShifts() {
             if (!currentSelectedEmployee) {
                 document.getElementById('calendar-wrapper').classList.add('hidden');
-                document.getElementById('progress-wrapper').classList.add('hidden');
                 return;
             }
-
-            const loader = document.getElementById('sync-loader');
-            const calendarWrap = document.getElementById('calendar-wrapper');
-            const progressWrap = document.getElementById('progress-wrapper');
-
-            // แสดงสถานะกำลังโหลด และซ่อนตารางไว้ก่อน
-            loader.classList.remove('hidden');
-            calendarWrap.classList.add('hidden');
-            progressWrap.classList.add('hidden');
-
-            try {
-                // ยิง API ไปที่ doGet พร้อมแนบพารามิเตอร์ชื่อพนักงาน
-                const fetchUrl = `${APPS_SCRIPT_URL}?action=getShifts&name=${encodeURIComponent(currentSelectedEmployee.name)}&month=${currentSelectedMonth}`;
-                const response = await fetch(fetchUrl);
-                const data = await response.json();
-                
-                // หากเจอข้อมูลกะงานเก่า ให้เอามาใส่ในปฏิทิน
-                if (data && data.shifts) {
-                    activeShifts = data.shifts;
-                } else {
-                    activeShifts = {};
-                }
-            } catch (err) {
-                console.error("Failed to fetch pre-existing shifts:", err);
-                // แผนสำรอง: ดึงจากความจำเครื่อง (LocalStorage) หากดึงจากอินเทอร์เน็ตล้มเหลว
-                const savedShifts = localStorage.getItem(`shifts_${currentSelectedMonth}_${currentSelectedEmployee.id}`);
-                activeShifts = savedShifts ? JSON.parse(savedShifts) : {};
-            } finally {
-                // ซ่อนตัวโหลด และแสดงปฏิทินที่มีข้อมูลครบถ้วน
-                loader.classList.add('hidden');
-                calendarWrap.classList.remove('hidden');
-                progressWrap.classList.remove('hidden');
-                
-                renderCalendar();
-                renderProgress();
+            document.getElementById('calendar-wrapper').classList.remove('hidden');
+            
+            // ดึงข้อมูลกะพนักงานจากตัวแปรที่แคชข้อมูลจาก Google Sheet ไว้แต่แรกมาแสดงผลทันที
+            if (sheetShiftsCache[currentSelectedEmployee.name]) {
+                activeShifts = {...sheetShiftsCache[currentSelectedEmployee.name]};
+            } else {
+                activeShifts = {};
             }
+            
+            renderCalendar();
+            calculateShiftSummary(); // คำนวณสรุปผลจำนวนวันใต้ปฏิทิน
         }
 
         function renderCalendar() {
@@ -351,33 +364,68 @@
             document.getElementById('calendar-completion-stat').textContent = `${daysAssignedCount}/${totalDays} วัน`;
         }
 
-        function renderProgress() {
+        // NEW: ฟังก์ชันคำนวณสรุปยอดรวมวันทำงานแต่ละประเภทใต้ปฏิทิน
+        function calculateShiftSummary() {
+            let counters = { '1': 0, '2': 0, '3': 0, 'W': 0, 'V': 0, 'C': 0 };
+            
+            Object.values(activeShifts).forEach(val => {
+                if (val === '1' || val === '2' || val === '3' || val === 'W' || val === 'V') {
+                    counters[val]++;
+                } else if (val && val.startsWith('C')) {
+                    counters['C']++;
+                }
+            });
+
+            document.getElementById('count-1').textContent = `${counters['1']} วัน`;
+            document.getElementById('count-2').textContent = `${counters['2']} วัน`;
+            document.getElementById('count-3').textContent = `${counters['3']} วัน`;
+            document.getElementById('count-W').textContent = `${counters['W']} วัน`;
+            document.getElementById('count-V').textContent = `${counters['V']} วัน`;
+            document.getElementById('count-C').textContent = `${counters['C']} วัน`;
+        }
+
+        // NEW: ฟังก์ชันวาดแดชบอร์ดความคืบหน้าของพนักงาน "ทุกคน" ใน Google Sheet
+        function renderProgressDashboard() {
             const dashboardList = document.getElementById('dashboard-employees-list');
             dashboardList.innerHTML = '';
-            if (!currentSelectedEmployee) return;
+            
+            if (employeesList.length === 0) {
+                dashboardList.innerHTML = '<p class="text-center text-xs text-slate-400 py-4">ไม่พบรายชื่อพนักงาน</p>';
+                return;
+            }
 
             const activeMonthInfo = monthsList.find(m => m.value === currentSelectedMonth);
             const totalDays = new Date(activeMonthInfo.year, activeMonthInfo.month + 1, 0).getDate();
-            const completedDays = Object.keys(activeShifts).length;
-            const percent = Math.min(100, Math.round((completedDays / totalDays) * 100));
 
-            const card = document.createElement('div');
-            card.className = "flex items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100";
-            card.innerHTML = `
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between gap-2 mb-1">
-                        <span class="text-xs font-bold text-slate-800 truncate">${currentSelectedEmployee.name}</span>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase truncate">${currentSelectedEmployee.brand || ''}</span>
+            employeesList.forEach(emp => {
+                // ค้นหาข้อมูลกะพนักงานจากตัวแปรที่แคชมาจาก Google Sheets ไว้
+                const empShifts = sheetShiftsCache[emp.name] || {};
+                const completedDays = Object.keys(empShifts).length;
+                const percent = Math.min(100, Math.round((completedDays / totalDays) * 100));
+                
+                // กำหนดสีกราฟและสถานะ: ถ้า 0% ให้แสดงสีแดง (ยังไม่กรอก) ถ้ากรอกครบบอกกรอกแล้ว
+                const isDone = completedDays >= totalDays;
+                const barColor = percent === 0 ? 'bg-rose-500' : (isDone ? 'bg-emerald-500' : 'bg-indigo-600');
+                const badgeColor = percent === 0 ? 'bg-rose-50 text-rose-700' : (isDone ? 'bg-emerald-50 text-emerald-700' : 'bg-indigo-50 text-indigo-700');
+
+                const card = document.createElement('div');
+                card.className = "flex items-center justify-between gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100 shadow-3xs";
+                card.innerHTML = `
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <span class="text-xs font-bold text-slate-700 truncate">${emp.name}</span>
+                            <span class="text-[9px] font-semibold text-slate-400 uppercase truncate">${emp.brand || 'ทั่วไป'}</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                            <div class="${barColor} h-full rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+                        </div>
                     </div>
-                    <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                        <div class="bg-indigo-600 h-full rounded-full" style="width: ${percent}%"></div>
-                    </div>
-                </div>
-                <div class="text-right flex flex-col items-end">
-                    <span class="text-[10px] font-bold py-0.5 px-1.5 rounded-full bg-indigo-50 text-indigo-700">${percent}%</span>
-                    <span class="text-[9px] text-slate-400 mt-0.5">${completedDays}/${totalDays} วัน</span>
-                </div>`;
-            dashboardList.appendChild(card);
+                    <div class="text-right flex flex-col items-end shrink-0">
+                        <span class="text-[9px] font-bold py-0.5 px-1.5 rounded-full ${badgeColor}">${percent === 0 ? 'ยังไม่กรอก' : percent + '%'}</span>
+                        <span class="text-[9px] text-slate-400 font-medium mt-0.5">${completedDays}/${totalDays} วัน</span>
+                    </div>`;
+                dashboardList.appendChild(card);
+            });
         }
 
         function openShiftModal(day) {
@@ -407,17 +455,16 @@
         function clearDayShift() { if (activeShifts[activeCalendarDay]) delete activeShifts[activeCalendarDay]; saveCurrentShifts(); }
 
         function saveCurrentShifts() {
-            localStorage.setItem(`shifts_${currentSelectedMonth}_${currentSelectedEmployee.id}`, JSON.stringify(activeShifts));
+            // อัปเดตในความทรงจำหน้าเว็บและคำนวณกล่องสรุปใหม่
+            sheetShiftsCache[currentSelectedEmployee.name] = {...activeShifts};
             renderCalendar();
-            renderProgress();
+            calculateShiftSummary();
+            renderProgressDashboard(); // อัปเดตกราฟแท่งรายบุคคลด้านล่างทันที
             closeShiftModal();
         }
 
         async function submitShifts() {
             if (!currentSelectedEmployee) return;
-
-            const activeMonthInfo = monthsList.find(m => m.value === currentSelectedMonth);
-            const totalDays = new Date(activeMonthInfo.year, activeMonthInfo.month + 1, 0).getDate();
 
             const submissionDoc = {
                 employeeName: currentSelectedEmployee.name,
@@ -429,7 +476,7 @@
             const submitBtn = document.getElementById('btn-submit-shifts');
             const originalHTML = submitBtn.innerHTML;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> กำลังบันทึกข้อมูลเข้าชีต...';
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> กำลังบันทึกข้อมูลเข้าซีต...';
 
             try {
                 await fetch(APPS_SCRIPT_URL, {
@@ -438,7 +485,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(submissionDoc)
                 });
-                showToast("บันทึกสำเร็จ", `ระบบอัปเดตตารางกะบน Google Sheet ของคุณเรียบร้อยแล้ว`, "success");
+                showToast("บันทึกสำเร็จ", `ระบบอัปเดตตารางกะบน Google Sheet เรียบร้อยแล้ว`, "success");
             } catch (err) {
                 console.error(err);
                 showToast("เกิดข้อผิดพลาด", "ไม่สามารถอัปเดตข้อมูลได้ กรุณาลองใหม่อีกครั้ง", "error");
@@ -468,8 +515,9 @@
         }
 
         window.onload = function() {
-            initMonthSelector();
-            fetchEmployeesFromSheet();
+            checkAdminRole(); // 1. ตรวจสอบสิทธิ์ว่าลิงก์นี้เปิดโดยผู้บริหารหรือพนักงาน
+            initMonthSelector(); // 2. โหลดรายการเดือน
+            fetchInitialDataFromSheet(); // 3. โหลดรายชื่อและสถานะความคืบหน้าของทุกคน
         };
     </script>
 </body>
