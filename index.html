@@ -20,13 +20,12 @@
     <div class="flex-1 flex flex-col max-w-md mx-auto w-full bg-white shadow-xl overflow-hidden relative">
         <header class="bg-gradient-to-r from-indigo-700 via-indigo-800 to-purple-800 text-white px-5 py-5 rounded-b-3xl shadow-lg relative overflow-hidden">
             <div class="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500 rounded-full opacity-20 pointer-events-none"></div>
-            
             <div class="relative z-10 flex justify-between items-start">
                 <div>
                     <h1 class="text-xl font-bold tracking-tight text-white mb-0.5">ตารางการทำงาน พนักงานขาย/PC/BA</h1>
                     <p class="text-indigo-200 text-sm font-medium flex items-center gap-1.5">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        แผนก Young Fashion
+                        แผนก Young Fashion (ข้อมูลซิงค์ตรงกับ Google Sheets)
                     </p>
                 </div>
                 <div id="admin-badge" class="hidden bg-red-500/30 text-red-200 border border-red-500/40 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold">Admin Mode</div>
@@ -58,7 +57,7 @@
                     </label>
                     <div class="relative">
                         <select id="employee-select" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none shadow-sm transition-all text-slate-700" disabled>
-                            <option value="" disabled selected>-- กำลังโหลดรายชื่อพนักงาน... --</option>
+                            <option value="" disabled selected>-- กำลังโหลดรายชื่อและตารางข้อมูล... --</option>
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center pr-10 pointer-events-none text-slate-400">
                             <i class="fa-solid fa-chevron-down text-xs"></i>
@@ -68,8 +67,8 @@
                 </div>
             </div>
 
-            <div id="sync-loader" class="bg-indigo-50 text-indigo-700 p-4 rounded-2xl border border-indigo-100 flex items-center justify-center gap-3 text-xs font-medium hidden">
-                <i class="fa-solid fa-spinner animate-spin text-base"></i> กำลังซิงค์ตารางกะงานกับ Google Sheets...
+            <div id="sync-loader" class="bg-indigo-50 text-indigo-700 p-4 rounded-2xl border border-indigo-100 flex items-center justify-center gap-3 text-xs font-medium">
+                <i class="fa-solid fa-spinner animate-spin text-base"></i> กำลังเชื่อมต่อและดึงตารางกะจาก Google Sheets ล่าสุด...
             </div>
 
             <div id="calendar-wrapper" class="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden hidden">
@@ -125,7 +124,7 @@
                     <span id="dashboard-month-label" class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md"></span>
                 </div>
                 <div id="dashboard-employees-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
-                    <p class="text-center text-xs text-slate-400 py-4">กำลังคำนวณสถานะพนักงาน...</p>
+                    <p class="text-center text-xs text-slate-400 py-4">กำลังคำนวณสถานะพนักงานจาก Google Sheet...</p>
                 </div>
             </div>
 
@@ -207,7 +206,7 @@
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxigcOGvsp2PJh5_vkNveSX2HmlV6LK2s8nCjW2u_fGMXFOqgwCccg5NimFEWvBf1TC/exec";
 
         let employeesList = [];
-        let sheetShiftsCache = {}; // เก็บข้อมูลกะงานทั้งหมดของทุกคนจาก Google Sheet
+        let sheetShiftsCache = {}; 
         let monthsList = [];
         let currentSelectedEmployee = null;
         let currentSelectedMonth = ""; 
@@ -215,7 +214,6 @@
         let activeCalendarDay = null; 
         let isAdmin = false;
 
-        // ฟังก์ชันเช็กสิทธิ์ Admin จาก URL Parameter (?role=admin)
         function checkAdminRole() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('role') === 'admin') {
@@ -228,37 +226,39 @@
                 monthSelect.classList.add('bg-white', 'text-slate-700');
                 
                 document.getElementById('month-lock-msg').innerHTML = '<span class="text-emerald-600"><i class="fa-solid fa-unlock"></i> ปลดล็อกสิทธิ์ Admin</span>';
-                // ปล่อยให้แสดงรูปศรชี้ลงปกติ
                 monthSelect.nextElementSibling.innerHTML = '<i class="fa-solid fa-chevron-down text-xs"></i>';
             }
         }
 
-        // ดึงรายชื่อและข้อมูลกะงานพนักงานทุกคน
+        // ปรับแก้จุดนี้: ให้ส่งพารามิเตอร์ของเดือนไปด้วยเวลาดึงข้อมูลครั้งแรก
         async function fetchInitialDataFromSheet() {
             const selectEl = document.getElementById('employee-select');
+            const loader = document.getElementById('sync-loader');
+            
             try {
-                const response = await fetch(APPS_SCRIPT_URL);
+                const response = await fetch(`${APPS_SCRIPT_URL}?month=${currentSelectedMonth}`);
                 const data = await response.json();
                 
                 if(data && data.employees) {
                     employeesList = data.employees;
-                    sheetShiftsCache = data.allShifts || {}; // เก็บข้อมูลกะงานของพนักงานทั้งหมดไว้
+                    sheetShiftsCache = data.allShifts || {}; 
                     
                     updateEmployeeDropdown();
                     selectEl.disabled = false;
-                    renderProgressDashboard(); // วาดตารางตรวจสอบสถานะทุกคน
+                    renderProgressDashboard(); 
+                    loader.classList.add('hidden'); // ซ่อนตัวโหลดหลักเมื่อซิงค์สำเร็จ
                 } else {
                     selectEl.innerHTML = '<option value="" disabled selected>-- ไม่พบข้อมูลรายชื่อในคอลัมน์ C --</option>';
                 }
             } catch (err) {
                 console.error("Fetch data failed:", err);
-                selectEl.innerHTML = '<option value="" disabled selected>-- โหลดข้อมูลล้มเหลว กรุณารีเฟรช --</option>';
+                selectEl.innerHTML = '<option value="" disabled selected>-- โหลดรายชื่อล้มเหลว กรุณารีเฟรช --</option>';
                 showToast("ข้อผิดพลาด", "ไม่สามารถดึงข้อมูลจาก Google Sheet ได้", "error");
             }
         }
 
         function initMonthSelector() {
-            const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "เดซันวาคม"];
+            const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
             const selectEl = document.getElementById('month-select');
             const baseDate = new Date(2026, 4, 1); 
             
@@ -301,9 +301,13 @@
             loadActiveShifts();
         });
 
-        document.getElementById('month-select').addEventListener('change', (e) => {
+        document.getElementById('month-select').addEventListener('change', async (e) => {
             currentSelectedMonth = e.target.value;
             document.getElementById('dashboard-month-label').textContent = monthsList.find(m => m.value === currentSelectedMonth)?.label || "";
+            
+            // หาก Admin เปลี่ยนเดือน ให้วิ่งไปโหลดชี้ข้อมูลกะงานของเดือนใหม่จากซีตทันที
+            document.getElementById('sync-loader').classList.remove('hidden');
+            await fetchInitialDataFromSheet();
             loadActiveShifts();
         });
 
@@ -314,7 +318,6 @@
             }
             document.getElementById('calendar-wrapper').classList.remove('hidden');
             
-            // ดึงข้อมูลกะพนักงานจากตัวแปรที่แคชข้อมูลจาก Google Sheet ไว้แต่แรกมาแสดงผลทันที
             if (sheetShiftsCache[currentSelectedEmployee.name]) {
                 activeShifts = {...sheetShiftsCache[currentSelectedEmployee.name]};
             } else {
@@ -322,7 +325,7 @@
             }
             
             renderCalendar();
-            calculateShiftSummary(); // คำนวณสรุปผลจำนวนวันใต้ปฏิทิน
+            calculateShiftSummary(); 
         }
 
         function renderCalendar() {
@@ -364,7 +367,6 @@
             document.getElementById('calendar-completion-stat').textContent = `${daysAssignedCount}/${totalDays} วัน`;
         }
 
-        // NEW: ฟังก์ชันคำนวณสรุปยอดรวมวันทำงานแต่ละประเภทใต้ปฏิทิน
         function calculateShiftSummary() {
             let counters = { '1': 0, '2': 0, '3': 0, 'W': 0, 'V': 0, 'C': 0 };
             
@@ -384,7 +386,6 @@
             document.getElementById('count-C').textContent = `${counters['C']} วัน`;
         }
 
-        // NEW: ฟังก์ชันวาดแดชบอร์ดความคืบหน้าของพนักงาน "ทุกคน" ใน Google Sheet
         function renderProgressDashboard() {
             const dashboardList = document.getElementById('dashboard-employees-list');
             dashboardList.innerHTML = '';
@@ -398,12 +399,10 @@
             const totalDays = new Date(activeMonthInfo.year, activeMonthInfo.month + 1, 0).getDate();
 
             employeesList.forEach(emp => {
-                // ค้นหาข้อมูลกะพนักงานจากตัวแปรที่แคชมาจาก Google Sheets ไว้
                 const empShifts = sheetShiftsCache[emp.name] || {};
                 const completedDays = Object.keys(empShifts).length;
                 const percent = Math.min(100, Math.round((completedDays / totalDays) * 100));
                 
-                // กำหนดสีกราฟและสถานะ: ถ้า 0% ให้แสดงสีแดง (ยังไม่กรอก) ถ้ากรอกครบบอกกรอกแล้ว
                 const isDone = completedDays >= totalDays;
                 const barColor = percent === 0 ? 'bg-rose-500' : (isDone ? 'bg-emerald-500' : 'bg-indigo-600');
                 const badgeColor = percent === 0 ? 'bg-rose-50 text-rose-700' : (isDone ? 'bg-emerald-50 text-emerald-700' : 'bg-indigo-50 text-indigo-700');
@@ -440,7 +439,7 @@
 
         function closeShiftModal() {
             const modal = document.getElementById('shift-modal');
-            modal.classList.add('opacity-0'); modal.firstElementChild.classList.add('translate-y-full');
+            modal.classList.add('opacity-0'); modal.firstElementChild.classList.add('scale-90');
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
@@ -455,11 +454,10 @@
         function clearDayShift() { if (activeShifts[activeCalendarDay]) delete activeShifts[activeCalendarDay]; saveCurrentShifts(); }
 
         function saveCurrentShifts() {
-            // อัปเดตในความทรงจำหน้าเว็บและคำนวณกล่องสรุปใหม่
             sheetShiftsCache[currentSelectedEmployee.name] = {...activeShifts};
             renderCalendar();
             calculateShiftSummary();
-            renderProgressDashboard(); // อัปเดตกราฟแท่งรายบุคคลด้านล่างทันที
+            renderProgressDashboard(); 
             closeShiftModal();
         }
 
@@ -515,9 +513,9 @@
         }
 
         window.onload = function() {
-            checkAdminRole(); // 1. ตรวจสอบสิทธิ์ว่าลิงก์นี้เปิดโดยผู้บริหารหรือพนักงาน
-            initMonthSelector(); // 2. โหลดรายการเดือน
-            fetchInitialDataFromSheet(); // 3. โหลดรายชื่อและสถานะความคืบหน้าของทุกคน
+            checkAdminRole(); 
+            initMonthSelector(); 
+            fetchInitialDataFromSheet(); // ดึงข้อมูลทันทีตามเดือนปัจจุบันที่หน้าเว็บเลือกอยู่
         };
     </script>
 </body>
