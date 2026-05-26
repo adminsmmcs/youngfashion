@@ -203,7 +203,7 @@
     </div>
 
     <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHmt3W0nINLmkrUsPk-hqSKceBHUSyR6ozMcINy9GWiUp3orEUy0oCzM-hg6zy2Fyl/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxigcOGvsp2PJh5_vkNveSX2HmlV6LK2s8nCjW2u_fGMXFOqgwCccg5NimFEWvBf1TC/exec";
 
         let employeesList = [];
         let sheetShiftsCache = {}; 
@@ -326,7 +326,6 @@
             calculateShiftSummary(); 
         }
 
-        // 🌟 แก้ไขจุดนี้: ปรับเงื่อนไขให้ตัดคำแสดงค่า C พร้อมวันที่เต็มรูปได้อย่างลงตัวไม่ล้นช่องปฏิทิน
         function renderCalendar() {
             const calendarGrid = document.getElementById('calendar-days');
             calendarGrid.innerHTML = '';
@@ -357,8 +356,18 @@
                     else if (shiftValue === 'V') { shiftStyles = "bg-rose-50 border-rose-200 text-rose-800 font-bold ring-2 ring-rose-500/10"; badgeHTML = `<span class="absolute right-1 bottom-1 text-[8px] bg-rose-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">V</span>`; }
                     else if (shiftValue.startsWith('C')) { 
                         shiftStyles = "bg-sky-50 border-sky-200 text-sky-800 font-bold ring-2 ring-sky-500/10"; 
-                        // แก้ไข: นำตัวอักษรทั้งหมด (เช่น C15/5) มาแสดงผล และปรับความยาวให้ยืดหยุ่นด้วยแนวนอน (px-1) และใช้ฟอนต์เล็กกะทัดรัด (text-[7.5px])
-                        badgeHTML = `<span class="absolute right-0.5 bottom-0.5 text-[7.5px] bg-sky-500 text-white px-1 py-0.5 rounded-md flex items-center justify-center font-bold max-w-[90%] tracking-tighter truncate">${shiftValue}</span>`; 
+                        
+                        // 🌟 แก้ไขจุดนี้: ทำการลบปี ค.ศ. ด้านหลังออกอัตโนมัติ โดยดึงมาแค่ วัน/เดือน (เช่น C15/5)
+                        let displayValue = shiftValue; // ค่าตั้งต้น เช่น C15/5/26
+                        if (shiftValue.includes('/')) {
+                            const parts = shiftValue.split('/');
+                            if (parts.length >= 2) {
+                                // parts[0] จะได้ "C15", parts[1] จะได้ "5" มารวมกันเป็น "C15/5"
+                                displayValue = parts[0] + '/' + parts[1];
+                            }
+                        }
+                        
+                        badgeHTML = `<span class="absolute right-0.5 bottom-0.5 text-[8.5px] bg-sky-500 text-white px-1.5 py-0.5 rounded-md flex items-center justify-center font-bold max-w-[95%] tracking-tight">${displayValue}</span>`; 
                     }
                 }
 
@@ -452,7 +461,6 @@
         function confirmShiftC() {
             const srcDateVal = document.getElementById('shift-c-source-date').value.trim();
             if (!srcDateVal) return;
-            // บันทึกคำว่า C นำหน้าตามด้วยสิ่งที่กรอก เช่น C15/5 หรือ C15/5/26 เข้าสู่ระบบ
             activeShifts[activeCalendarDay] = `C${srcDateVal}`;
             saveCurrentShifts();
         }
