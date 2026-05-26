@@ -256,10 +256,14 @@
             }
         }
 
-        function initMonthSelector() {
+function initMonthSelector() {
             const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
             const selectEl = document.getElementById('month-select');
-            const baseDate = new Date(2026, 5, 1); 
+            const baseDate = new Date(2026, 5, 1); // เริ่มคำนวณจากเดือน พ.ค. 2026 เพื่อสร้างตัวเลือกล่วงหน้า 4 เดือน
+            
+            // 🌟 วิธีเปลี่ยนเดือนเริ่มต้น (เมื่อลบ ?role=admin ออก):
+            // พิมพ์ชื่อเดือนที่ต้องการให้แสดงเป็นอันแรกตรงนี้ได้เลยครับ เช่น "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม"
+            const DEFAULT_MONTH_NAME = "กรกฎาคม"; 
             
             for (let i = 0; i < 4; i++) {
                 const targetDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + i, 1);
@@ -272,7 +276,8 @@
                 option.value = value;
                 option.textContent = `${monthName} ${yearTH}`;
                 
-                if (i === 1) { 
+                // เช็กว่าถ้าชื่อเดือนตรงกับที่แอดมินตั้งค่าไว้ ให้เลือกเดือนนี้เป็นค่าเริ่มต้นทันที
+                if (monthName === DEFAULT_MONTH_NAME) { 
                     option.selected = true;
                     currentSelectedMonth = value;
                 }
